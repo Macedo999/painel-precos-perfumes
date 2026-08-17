@@ -1,0 +1,34 @@
+.search-button { height:44px; border:0; border-radius:8px; background:#a77736; color:#fff; padding:0 18px; font:inherit; font-size:12px; font-weight:700; white-space:nowrap; cursor:pointer }
+.search-button:disabled { opacity:.55; cursor:not-allowed }
+.search-error { max-width:1200px; margin:16px auto; padding:14px 18px; border:1px solid #e7b9ad; border-radius:8px; background:#fff3ef; color:#8d3e2d; font-size:13px }
+.demo-label { font-size:10px; letter-spacing:.16em; color:#9b6d2f; font-weight:700 }
+.live-results { max-width:1200px; margin:22px auto 80px; background:#fff; border:1px solid #dfdfd8; border-radius:13px; overflow:hidden; box-shadow:0 8px 28px #314d3d0a }
+.live-heading { display:flex; align-items:center; justify-content:space-between; padding:28px; border-bottom:1px solid #e7e6e0; background:linear-gradient(120deg,#f4f7f3,#fff) }
+.live-heading h2 { font-family:'Playfair Display',serif; font-size:26px; margin:7px 0 }
+.live-heading p { margin:0; color:#6f7872; font-size:12px }
+.live-badge { font-size:10px; letter-spacing:.16em; color:#28704f; font-weight:700 }
+.live-badge span { display:inline-block; width:7px; height:7px; border-radius:50%; background:#38a56f; margin-right:6px; box-shadow:0 0 0 4px #dff3e7 }
+.live-updated { display:flex; align-items:center; gap:9px; color:#727c75; font-size:10px; text-align:right }
+.live-updated strong { color:#294336 }
+.supplier-grid { padding:20px 28px 28px; display:grid; grid-template-columns:repeat(3,1fr); gap:12px }
+.supplier-card { border:1px solid #e4e3dc; border-radius:10px; padding:17px; display:flex; flex-direction:column; min-width:0 }
+.supplier-name { display:flex; align-items:center; gap:7px; color:#254735; font-size:13px }
+.supplier-card>small { height:34px; margin:8px 0; color:#7b837e; font-size:10px; line-height:1.5; overflow:hidden }
+.supplier-price { display:flex; justify-content:space-between; align-items:baseline; padding-top:10px; border-top:1px solid #eeede8 }
+.supplier-price strong { font-size:17px }
+.supplier-price span { font-size:11px; color:#27714d; font-weight:700 }
+.supplier-links { display:flex; gap:12px; margin-top:12px }
+.supplier-links a { display:flex; align-items:center; gap:3px; font-size:10px; color:#805b2d }
+.alternatives { border-top:1px solid #e7e6e0; padding:18px 28px; display:flex; gap:12px; align-items:center; overflow:auto; font-size:10px; color:#6e7771 }
+.alternatives a { white-space:nowrap; padding:6px 9px; background:#f2f0e9; border-radius:20px }
+.alternatives strong { white-space:nowrap; color:#294336 }
+
+@media(max-width:800px) {
+  .search-button { flex:1 }
+  .live-results,.search-error { margin-left:18px; margin-right:18px }
+  .live-heading { align-items:flex-start; gap:20px }
+  .live-updated { display:none }
+  .supplier-grid { grid-template-columns:1fr; padding:16px }
+  .alternatives { align-items:flex-start; flex-direction:column }
+  .result-count { display:none }
+}
