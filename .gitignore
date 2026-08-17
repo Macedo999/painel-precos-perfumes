@@ -6,4 +6,7 @@ dist
 *.tsbuildinfo
 vite.config.js
 vite.config.d.ts
+.wrangler
+work/
+worker/
 .DS_Store

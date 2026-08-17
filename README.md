@@ -1,72 +1,75 @@
 # Painel de preços de perfumes
 
-MVP de um painel web para comparar ofertas de perfumes do **Compras no Paraguai** com anúncios equivalentes do **Mercado Livre**. Cada oferta paraguaia aparece separada por fornecedor, com preço na moeda de origem, conversão estimada para reais, ao menos três referências brasileiras e a diferença absoluta e percentual.
+Painel pessoal que pesquisa perfumes no **Compras no Paraguai**, mantém cada anunciante paraguaio como um fornecedor separado e compara o mesmo modelo e volume com anúncios brasileiros do **Mercado Livre**. A área da Shopee está preparada para uma integração oficial futura.
 
-> Os dados incluídos são demonstrativos. Os links levam a páginas de busca/origem e não representam uma captura ao vivo.
+Produção: <https://painel-precos-perfumes.vercel.app>
 
-## Como iniciar
+## Como funciona
+
+1. A busca apresenta os produtos encontrados no Compras no Paraguai, separados por versão e volume.
+2. O produto escolhido exibe os preços de cada fornecedor paraguaio em dólar e a conversão aproximada em reais.
+3. A integração oficial do Mercado Livre busca anúncios brasileiros e descarta resultados com volume ou variante diferente.
+4. O painel calcula a faixa de preços e a diferença em reais e percentual contra a menor oferta encontrada no Paraguai.
+
+As consultas são atualizadas por intervalos e usam cache. Não há garantia de streaming ou atualização instantânea. Preço, estoque, câmbio, frete, impostos e IOF podem mudar no site de origem.
+
+## Desenvolvimento
 
 Requer Node.js 20 ou superior.
 
 ```bash
 npm install
-cp .env.example .env
 npm run dev
 ```
 
-Abra o endereço indicado no terminal. Para validar a versão de produção:
+Validação:
 
 ```bash
 npm test
 npm run build
-npm run preview
 ```
 
-## Estrutura
+## Configuração do Mercado Livre
 
-- `src/components`: componentes visuais reutilizáveis.
-- `src/data`: dados demonstrativos, substituíveis por fontes reais.
-- `src/services/matching.ts`: normalização, equivalência por nome e volume e cálculos.
-- `src/services/providers.ts`: contratos dos conectores externos.
-- `src/types.ts`: modelo comum das ofertas.
+Crie uma aplicação no DevCenter do Mercado Livre e cadastre exatamente este endereço de retorno:
 
-O pareamento exige um nome canônico compatível **e volume idêntico em ml**. Isso impede, por exemplo, comparar um frasco de 50 ml com um de 100 ml. Em produção, recomenda-se ainda validar concentração (EDT/EDP), versão, kit e GTIN quando disponível.
+```text
+https://painel-precos-perfumes.vercel.app/api/mercadolivre-callback
+```
 
-## Variáveis de ambiente
-
-Copie `.env.example` para `.env`. As variáveis previstas são:
+Configure as variáveis abaixo na Vercel para os ambientes de produção e preview:
 
 | Variável | Uso |
 |---|---|
-| `VITE_DATA_MODE` | `demo` no MVP; futuramente seleciona uma API própria. |
-| `MERCADO_LIVRE_ACCESS_TOKEN` | Token da integração oficial, armazenado **somente no backend**. |
-| `CNP_COLLECTOR_ENABLED` | Habilita o coletor responsável após revisão dos termos. |
-| `CNP_REQUEST_INTERVAL_MS` | Intervalo mínimo entre consultas do coletor. |
-| `CNP_CACHE_TTL_MINUTES` | Tempo de cache para reduzir acessos repetidos. |
-| `EXCHANGE_RATE_PROVIDER_URL` | Serviço autorizado para conversão PYG/USD → BRL. |
+| `MERCADO_LIVRE_CLIENT_ID` | Identificador da aplicação no Mercado Livre. |
+| `MERCADO_LIVRE_CLIENT_SECRET` | Chave secreta da aplicação; nunca deve ser enviada ao frontend ou ao GitHub. |
+| `MERCADO_LIVRE_REDIRECT_URI` | `https://painel-precos-perfumes.vercel.app/api/mercadolivre-callback` |
 
-Nunca exponha tokens usando o prefixo `VITE_`, pois essas variáveis são incorporadas ao JavaScript do navegador.
+Depois de publicar novamente, pesquise um perfume e use **Conectar Mercado Livre**. O fluxo OAuth guarda os tokens em cookies seguros, `HttpOnly` e `SameSite=Lax`. O access token é enviado à API somente pelo backend e o refresh token é substituído quando necessário.
 
-## Integração futura com Mercado Livre
+## Shopee
 
-Implemente um endpoint de backend que use a API oficial do Mercado Livre e devolva o modelo `SourceOffer`. O `MercadoLivreProvider` em `src/services/providers.ts` já consome esse contrato. A aplicação deve guardar credenciais no servidor, lidar com renovação/autorização conforme a documentação oficial e respeitar limites de requisição. Consulte a documentação vigente antes de implementar, pois os requisitos podem mudar.
+Enquanto a conta não tiver acesso à Shopee Open Platform ou à API oficial de afiliados, o painel oferece apenas um link de pesquisa manual. Não são exibidos preços não verificados e não há coleta automatizada direta das páginas da Shopee.
 
-## Coleta responsável do Compras no Paraguai
+## Estrutura
 
-O `ComprasNoParaguaiProvider` é deliberadamente apenas uma interface para um backend/coletor. Antes de ativá-lo:
+- `api/search.js`: pesquisa de produtos no coletor do Compras no Paraguai.
+- `api/offers.js`: preços separados por fornecedor paraguaio.
+- `api/marketplaces.js`: equivalência e preços brasileiros.
+- `api/mercadolivre-start.js`: início da autorização oficial.
+- `api/mercadolivre-callback.js`: troca segura do código por tokens.
+- `api/lib/mercadolivre.js`: gestão e renovação dos tokens.
+- `src/components/MarketplaceComparison.tsx`: faixa de preços e diferenças.
+- `worker/`: coletor responsável do Compras no Paraguai, com cache e limites.
 
-1. confirme permissão, termos de uso e `robots.txt` vigentes;
-2. prefira API ou feed oficial, se disponível;
-3. use cache, identificação apropriada, baixa frequência e retentativa exponencial;
-4. registre a origem, horário, moeda e fornecedor de cada preço;
-5. não contorne bloqueios nem mecanismos anti-automação.
+## Equivalência de produtos
 
-O frontend não deve fazer coleta direta. Um processo agendado no servidor pode atualizar um banco ou cache e servir resultados normalizados à interface.
+O volume em mililitros deve ser idêntico. Marcadores de variante como `Rosé`, `Black`, `Sexy`, `Heroes`, `Elixir`, `Intense` e `Absolu` também são verificados. Isso impede, por exemplo, comparar 212 VIP 80 ml com 212 VIP Rosé 80 ml ou com um frasco de 100 ml.
 
-## Atualização e câmbio
+## Coleta responsável
 
-As atualizações são executadas **em intervalos**, conforme a agenda e os limites das fontes; não há garantia de streaming ou tempo real. A data/hora exibida deve ser a da última coleta bem-sucedida. Conversões para reais são estimativas: registre a taxa, a fonte e o horário usados e deixe claro que impostos, frete e IOF podem alterar o custo final.
+O Compras no Paraguai é consultado pelo backend, com cache e frequência limitada. A implementação não deve contornar bloqueios ou mecanismos anti-automação. Sempre prefira uma API ou feed autorizado caso a plataforma disponibilize um canal oficial.
 
 ## Publicação
 
-O projeto pode ser publicado como site estático após `npm run build`; a pasta gerada é `dist`. Configure integrações e segredos em um backend separado. Este diretório não foi publicado, commitado nem associado a um repositório remoto.
+O frontend Vite e as funções `api/` são publicados juntos na Vercel. Segredos devem permanecer nas variáveis de ambiente da plataforma. O diretório `dist/`, dependências locais, tokens e arquivos `.env` não devem ser enviados ao repositório.
