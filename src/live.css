@@ -22,6 +22,12 @@
 .alternatives { border-top:1px solid #e7e6e0; padding:18px 28px; display:flex; gap:12px; align-items:center; overflow:auto; font-size:10px; color:#6e7771 }
 .alternatives a { white-space:nowrap; padding:6px 9px; background:#f2f0e9; border-radius:20px }
 .alternatives strong { white-space:nowrap; color:#294336 }
+.search { position:relative }
+.suggestions { position:absolute; z-index:20; left:0; right:0; top:calc(100% + 8px); background:#fff; border:1px solid #ddd4c8; border-radius:12px; box-shadow:0 16px 35px #20372b24; overflow:hidden }
+.suggestions button { display:flex; width:100%; padding:14px 16px; border:0; border-bottom:1px solid #eee6db; background:#fff; text-align:left; cursor:pointer; flex-direction:column; gap:4px; color:#173f32 }
+.suggestions button:last-child { border-bottom:0 }
+.suggestions button:hover { background:#fbf6ed }
+.suggestions span { font-size:12px; color:#7b817c }
 
 @media(max-width:800px) {
   .search-button { flex:1 }
