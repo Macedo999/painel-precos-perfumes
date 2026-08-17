@@ -3,6 +3,7 @@ import { Bell, ChevronDown, Clock3, Search, Sparkles, TrendingDown } from 'lucid
 import { OfferCard } from './components/OfferCard'
 import { LiveResults } from './components/LiveResults'
 import { demoComparisons } from './data/demo'
+import { fallbackMatches } from './data/fallbackCatalog'
 import { isLiveSearchConfigured, searchComprasParaguai, type LiveSearchResult } from './services/liveSearch'
 
 export default function App() {
@@ -11,6 +12,7 @@ export default function App() {
   const [liveResult, setLiveResult] = useState<LiveSearchResult | null>(null)
   const [loading, setLoading] = useState(false)
   const [searchError, setSearchError] = useState('')
+  const suggestions = query.trim().length >= 2 ? fallbackMatches(query) : []
   const suppliers = [...new Set(demoComparisons.map(({ source }) => source.supplier))]
   const filtered = useMemo(() => demoComparisons.filter(({ source }) => {
     const text = `${source.productName} ${source.supplier}`.toLowerCase()
@@ -30,7 +32,10 @@ export default function App() {
     setSearchError('')
     setLiveResult(null)
     try { setLiveResult(await searchComprasParaguai(term)) }
-    catch (error) { setSearchError(error instanceof Error ? error.message : 'Falha na consulta') }
+    catch (error) {
+      if (suggestions.length) setLiveResult(suggestions[0])
+      else setSearchError(error instanceof Error ? error.message : 'Falha na consulta')
+    }
     finally { setLoading(false) }
   }
 
@@ -46,7 +51,9 @@ export default function App() {
         <div className="hero-stats"><div><small>ECONOMIA MÉDIA</small><strong>{averageSaving.toFixed(0)}<sup>%</sup></strong><span><TrendingDown size={14} /> nas ofertas monitoradas</span></div><div><small>ÚLTIMA ATUALIZAÇÃO</small><strong className="time">13:42</strong><span><Clock3 size={14} /> 17 ago 2026</span></div></div>
       </section>
       <form className="toolbar" id="ofertas" onSubmit={handleSearch}>
-        <div className="search"><Search size={18}/><input aria-label="Buscar perfume" placeholder="Digite um perfume, por exemplo: Sauvage" value={query} onChange={(e) => setQuery(e.target.value)} /></div>
+        <div className="search"><Search size={18}/><input aria-label="Buscar perfume" placeholder="Digite um perfume, por exemplo: 212" value={query} onChange={(e) => { setQuery(e.target.value); setLiveResult(null); setSearchError('') }} />
+          {suggestions.length > 0 && !liveResult && <div className="suggestions" role="listbox" aria-label="Perfumes encontrados">{suggestions.map((item) => <button type="button" key={item.product!.url} onClick={() => { setQuery(item.product!.name); setLiveResult(item); setSearchError('') }}><strong>{item.product!.name}</strong><span>{item.product!.volumeMl} ml · {item.offers.length} fornecedores</span></button>)}</div>}
+        </div>
         <button className="search-button" disabled={loading || query.trim().length < 2}>{loading ? 'Buscando…' : 'Buscar preços'}</button>
         <label className="select-wrap"><select aria-label="Filtrar fornecedor" value={supplier} onChange={(e) => setSupplier(e.target.value)}><option>Todos os fornecedores</option>{suppliers.map((item) => <option key={item}>{item}</option>)}</select><ChevronDown size={16}/></label>
         <span className="result-count">{filtered.length} ofertas encontradas</span>
